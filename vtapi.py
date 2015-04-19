@@ -18,6 +18,7 @@ logger = logging
 import os
 import sys
 import requests
+import requests_cache
 import hashlib
 
 TYPE_L = {
@@ -64,8 +65,13 @@ class VtApi(object):
             https://www.virustotal.com/en/documentation/public-api/
     """
 
-    def __init__(self, sApiKey):
+    def __init__(self, sApiKey,
+        enable_cache=False, cache_expire_after=604800, vt_cache_file='/tmp/vtapi.cache'):
         self.sApiKey = sApiKey
+        self.enable_cache = enable_cache
+        if self.enable_cache is True:
+            requests_cache.install_cache()
+            requests_cache.install_cache(vt_cache_file, backend='sqlite', expire_after=cache_expire_after)
 
 
     def file_report(self, sHash):
@@ -86,10 +92,18 @@ class VtApi(object):
         logger.info("start url_report() sUrl=[%s]", sUrl)
         dParam = {'apikey': self.sApiKey, 'resource': sUrl}
         try:
+            logger.info("url_report() sUrl=[%s]: %s, %s", sUrl, URL_REPORT, dParam)
             reqRet = requests.get(URL_REPORT, params=dParam, timeout=INT_TIME_OUT)
-            dReport = reqRet.json()
+            if self.enable_cache is True and reqRet.from_cache is True:
+                logger.info("from cache url_report() sUrl=[%s]", sUrl)
+            if reqRet.status_code == 200:
+                dReport = reqRet.json()
+            else:
+                logger.info("fail url_report() sUrl=[%s]: non-200 status code [%s]", reqRet.status_code)
+                return {}
+
         except Exception as e:
-            logger.exception("fail url_report() sUrl=[%s]", sUrl)
+            logger.exception("fail url_report() sUrl=[%s] reqRet=[%s]", sUrl, reqRet)
             raise e
         if dReport.get("response_code", 0) == 1:
             return dReport
@@ -190,3 +204,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
