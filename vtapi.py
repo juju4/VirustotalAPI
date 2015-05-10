@@ -98,8 +98,11 @@ class VtApi(object):
                 logger.info("from cache url_report() sUrl=[%s]", sUrl)
             if reqRet.status_code == 200:
                 dReport = reqRet.json()
+            elif reqRet.status_code == 204:
+                logger.error("fail url_report() sUrl=[%s]: 204 status code - No content", sUrl)
+                return {}
             else:
-                logger.info("fail url_report() sUrl=[%s]: non-200 status code [%s]", reqRet.status_code)
+                logger.error("fail url_report() sUrl=[%s]: non-200 status code [%s]", sUrl, reqRet.status_code)
                 return {}
 
         except Exception as e:
