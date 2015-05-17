@@ -12,5 +12,5 @@ setup(name='vtapi',
       license='MIT',
       platforms=['Any'],
       keywords=["virustotal", "malicious", "virus"],
-      install_requires=["requests"],
+      install_requires=["requests", "requests-cache" ],
 )
