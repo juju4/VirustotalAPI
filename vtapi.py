@@ -69,6 +69,7 @@ class VtApi(object):
         enable_cache=False, cache_expire_after=604800, vt_cache_file='/tmp/vtapi.cache'):
         self.sApiKey = sApiKey
         self.enable_cache = enable_cache
+	self.last_cache_call = None
         if self.enable_cache is True:
             requests_cache.install_cache()
             requests_cache.install_cache(vt_cache_file, backend='sqlite', expire_after=cache_expire_after)
@@ -79,6 +80,9 @@ class VtApi(object):
         dParam = {'apikey': self.sApiKey, 'resource': sHash}
         try:
             reqRet = requests.get(FILE_REPORT, params=dParam, timeout=INT_TIME_OUT)
+            if self.enable_cache is True and reqRet.from_cache is True:
+		self.last_cache_call = sHash
+                logger.info("from cache file_report() sHash=[%s]", sUrl)
             dReport = reqRet.json()
         except Exception as e:
             logger.exception("fail file_report() sHash=[%s]", sHash)
@@ -95,6 +99,7 @@ class VtApi(object):
             logger.info("url_report() sUrl=[%s]: %s, %s", sUrl, URL_REPORT, dParam)
             reqRet = requests.get(URL_REPORT, params=dParam, timeout=INT_TIME_OUT)
             if self.enable_cache is True and reqRet.from_cache is True:
+		self.last_cache_call = sUrl
                 logger.info("from cache url_report() sUrl=[%s]", sUrl)
             if reqRet.status_code == 200:
                 dReport = reqRet.json()
