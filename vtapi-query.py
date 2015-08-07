@@ -67,7 +67,8 @@ def vtSQLupdate(dburi):
     import sqlalchemy
     engine = sqlalchemy.create_engine(dburi)
     logger.debug("starting sql update: " + dburi)
-    res1 = engine.execute('select "FQDN" from domain_enrich where length("virustotal_json") < 10')
+    #res1 = engine.execute('select "FQDN" from domain_enrich where length("virustotal_json") < 10')
+    res1 = engine.execute('select "FQDN" from domain_enrich where length("virustotal_json") < 10 and date > to_char((now() - interval \'2 day\'), \'YYYYMMDD\')')
     for row in res1:
         logging.debug("row " + str(row) )
         for name,fqdn in row.items():
